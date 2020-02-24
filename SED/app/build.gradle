@@ -43,4 +43,7 @@ dependencies {
     //Butter Knife...
     implementation 'com.jakewharton:butterknife:10.2.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+    //MPAndroid Charts...
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
 }
