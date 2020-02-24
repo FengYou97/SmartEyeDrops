@@ -17,16 +17,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-}
-// Butterknife requires Java 8.
-compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    // Butterknife requires Java 8.
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
 }
 //Firebase Plugins ...
 apply plugin: 'com.google.gms.google-services'
 //Butter Knife Plugins ...
-apply plugin: 'com.android.library'
 apply plugin: 'com.jakewharton.butterknife'
 dependencies {
     //Application
