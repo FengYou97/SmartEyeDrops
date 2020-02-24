@@ -10,10 +10,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        findViewById(R.id.)
     }
 }
 
-//Butter Knife Example... To use Following for easier use... TODO Move to a different File soon.
+//Butter Knife Example... To use Following for easier use... TODO Move to
 /**
  * Quick Example.... (Use R2 instead of R)
  * class ExampleActivity extends Activity {
