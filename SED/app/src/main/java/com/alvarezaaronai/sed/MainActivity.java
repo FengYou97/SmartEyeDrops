@@ -4,12 +4,42 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.ScatterChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+import butterknife.BindView;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        LineChart mScatterChart = findViewById(R.id.scatter_usage);
+        LineDataSet lineDataSet = new LineDataSet(addDataValues(), "Data Set 1");
+
+        ArrayList<ILineDataSet> iLineDataSets = new ArrayList<>();
+        iLineDataSets.add(lineDataSet);
+
+        LineData lineData = new LineData(iLineDataSets);
+        mScatterChart.setData(lineData);
+        mScatterChart.invalidate();
+}
+
+    private ArrayList<Entry>addDataValues(){
+        ArrayList<Entry> dataValues = new ArrayList<>();
+        dataValues.add(new Entry(0,20));
+        dataValues.add(new Entry(1,22));
+        dataValues.add(new Entry(2,24));
+
+        return dataValues;
     }
 }
 
