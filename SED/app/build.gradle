@@ -17,7 +17,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    // Butterknife requires Java 8.
+    // Butterknife/MetaWear requires Java 8.
     compileOptions {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
@@ -45,5 +45,6 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
     //MPAndroid Charts...
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-
+    //MetaWear Sensors...
+    implementation 'com.mbientlab:metawear:3.7.0'
 }
