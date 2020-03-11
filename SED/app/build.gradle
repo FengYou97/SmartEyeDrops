@@ -46,5 +46,6 @@ dependencies {
     //MPAndroid Charts...
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
-
+    //MetaWear Sensors...
+    implementation 'com.mbientlab:metawear:3.7.0'
 }

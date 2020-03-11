@@ -24,7 +24,11 @@ allprojects {
         jcenter()
         //MPAndroid Charts...
         maven { url 'https://jitpack.io' }
-
+        //MetaWear Sensor...
+        ivy {
+            url "https://mbientlab.com/releases/ivyrep"
+            layout "gradle"
+        }
     }
 }
 
