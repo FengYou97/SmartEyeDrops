@@ -7,15 +7,15 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Client extends AsyncTask<Void, Void, Void> {
+public class Client extends AsyncTask<String, Void, Void> {
 
     private static Socket s;
 
     @Override
-    protected Void doInBackground(Void... Void) {
+    protected Void doInBackground(String... arg0) {
         try{
             s = new Socket("3.12.241.68", 8800);
-            Send("hello");
+            Send(arg0[0]);
         }catch(UnknownHostException e){
             e.printStackTrace();
         }catch(IOException e){

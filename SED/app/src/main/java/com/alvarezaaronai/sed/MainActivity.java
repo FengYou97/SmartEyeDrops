@@ -31,7 +31,9 @@ public class MainActivity extends AppCompatActivity {
         LineData lineData = new LineData(iLineDataSets);
         mScatterChart.setData(lineData);
         mScatterChart.invalidate();
-        new Client().execute();
+
+        //Use this to send to Server: replace "test1" with the data in String format
+        new Client().execute("test1");
 }
 
     private ArrayList<Entry>addDataValues(){
