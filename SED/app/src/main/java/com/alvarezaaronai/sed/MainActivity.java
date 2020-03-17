@@ -32,8 +32,11 @@ public class MainActivity extends AppCompatActivity {
         mScatterChart.setData(lineData);
         mScatterChart.invalidate();
 
-        //Use this to send to Server: replace "test1" with the data in String format
-        new Client().execute("test1");
+        //Use this to send to Server: replace "t1" with the data in String format
+        //place this part of the code in the area where data is collected so that it can be sent
+        String t1 = "time,x,y,z,force\n" +
+                    "10,0.2,0.2,0.2,100";
+        new Client().execute(t1);
 }
 
     private ArrayList<Entry>addDataValues(){

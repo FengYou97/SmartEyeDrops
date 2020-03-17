@@ -16,6 +16,7 @@ public class Client extends AsyncTask<String, Void, Void> {
         try{
             s = new Socket("3.12.241.68", 8800);
             Send(arg0[0]);
+            s.close();
         }catch(UnknownHostException e){
             e.printStackTrace();
         }catch(IOException e){
