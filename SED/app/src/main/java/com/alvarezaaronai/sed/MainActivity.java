@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         LineData lineData = new LineData(iLineDataSets);
         mScatterChart.setData(lineData);
         mScatterChart.invalidate();
+        new Client().execute();
 }
 
     private ArrayList<Entry>addDataValues(){
