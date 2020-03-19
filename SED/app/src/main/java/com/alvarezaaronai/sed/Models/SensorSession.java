@@ -22,7 +22,7 @@ public class SensorSession {
         timeStamp = sdf.format(timestamp);
         System.out.println(timeStamp);
 
-        dataString = new StringBuilder();
+        dataString = new StringBuilder("time,x,y,z,force\n");
 
     }
 
