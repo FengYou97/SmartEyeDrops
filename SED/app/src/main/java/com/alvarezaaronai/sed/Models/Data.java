@@ -4,36 +4,33 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 public class Data {
-    private String timeStamp = "";
-    private Long xAccel = new Long(0);
-    private Long yAccel = new Long(0);
-    private Long zAccel = new Long(0);
+    private String timeStamp;
+    private Float xAccel ;
+    private Float yAccel ;
+    private Float zAccel ;
+    private Float force ;
 
-    public Data(String timeStamp, Long xAccel, Long yAccel, Long zAccel) {
-        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        System.out.println(timestamp);
-        //format timestamp
-        System.out.println(sdf.format(timestamp));
-        this.timeStamp =  "" + sdf.format(timestamp);
+    public Data(String timeStamp, Float xAccel, Float yAccel, Float zAccel, Float force) {
+        this.timeStamp = timeStamp;
         this.xAccel = xAccel;
         this.yAccel = yAccel;
         this.zAccel = zAccel;
+        this.force = force;
     }
 
     public String getTimeStamp() {
         return timeStamp;
     }
 
-    public Long getxAccel() {
+    public Float getxAccel() {
         return xAccel;
     }
 
-    public Long getyAccel() {
+    public Float getyAccel() {
         return yAccel;
     }
 
-    public Long getzAccel() {
+    public Float getzAccel() {
         return zAccel;
     }
 
@@ -41,25 +38,33 @@ public class Data {
         this.timeStamp = timeStamp;
     }
 
-    public void setxAccel(Long xAccel) {
+    public void setxAccel(Float xAccel) {
         this.xAccel = xAccel;
     }
 
-    public void setyAccel(Long yAccel) {
+    public void setyAccel(Float yAccel) {
         this.yAccel = yAccel;
     }
 
-    public void setzAccel(Long zAccel) {
+    public void setzAccel(Float zAccel) {
         this.zAccel = zAccel;
+    }
+
+    public Float getForce() {
+        return force;
+    }
+
+    public void setForce(Float force) {
+        this.force = force;
     }
 
     @Override
     public String toString() {
-        return "Data{" +
-                "timeStamp='" + timeStamp + '\'' +
-                ", xAccel=" + xAccel +
-                ", yAccel=" + yAccel +
-                ", zAccel=" + zAccel +
-                '}';
+        return  ""  + timeStamp +
+                "," + xAccel +
+                "," + yAccel +
+                "," + zAccel +
+                "," + force +
+                '\n';
     }
 }

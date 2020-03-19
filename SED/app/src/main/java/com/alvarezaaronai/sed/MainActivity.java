@@ -9,8 +9,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.alvarezaaronai.sed.Models.Data;
 import com.alvarezaaronai.sed.Models.SensorSession;
@@ -37,14 +39,18 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private MetaWearBoard board;
     private Accelerometer accel;
     private Gpio gpio;
-
+    private TextView mAccel;
+    private Handler mHandler = new Handler();
+    private StringBuilder mTempData;
     /*
         Main Activity
      */
-    private final String MW_MAC_ADDRESS= "F5:64:B2:18:F2:09";
-                                        //If you change the Mac Address, reset Branch,
-                                        //Only change it to test your own device.
+    private final String MW_MAC_ADDRESS = "F5:64:B2:18:F2:09";
+    //If you change the Mac Address, reset Branch,
+    //Only change it to test your own device.
     private SensorSession sensorData = new SensorSession();
+    private Data mData ;
+
 
     /*
         Log Tags
@@ -55,6 +61,13 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        /*
+            Import Member Variables
+         */
+        mAccel = findViewById(R.id.homeactivity_textview_accel);
+        //Clear Text View
+        mAccel.setText("");
+        mTempData = new StringBuilder();
         Log.i(TAG, "onCreate: Binding Service");
         /*
            Bind a Connection Service / Disconnect when App is close
@@ -63,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         getApplicationContext().bindService(new Intent(this, BtleService.class),
                 this, Context.BIND_AUTO_CREATE);
         Log.i(TAG, "onCreate: Finished Binding Service");
+        mHandler.postDelayed(mAccelRun,5000);
+        mHandler.postDelayed(mSetAccel,15000);
         /*
             All Sensor Data Wil Be updated to AWS
          */
@@ -70,12 +85,16 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         //place this part of the code in the area where data is collected so that it can be sent
 //        String t1 = "time,x,y,z,force\n" +
 //                "10,0.2,0.2,0.2,100";
-//        new Client().execute(t1);
+//
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "onDestroy: Destroyed Binding");
+        Log.i(TAG, "onDestroy: Stoping Accel");
+        accel.stop();
+        accel.acceleration().stop();
         // Unbind the service when the activity is destroyed
         getApplicationContext().unbindService(this);
     }
@@ -89,17 +108,18 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     @Override
-    public void onServiceDisconnected(ComponentName componentName) { }
+    public void onServiceDisconnected(ComponentName componentName) {
+    }
 
     /*
      *Methods HomeActivity
      */
     public void retrieveBoard() {
-        final BluetoothManager btManager=
+        final BluetoothManager btManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        final BluetoothDevice remoteDevice=
+        final BluetoothDevice remoteDevice =
                 btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
-        Log.i(TAG, "retrieveBoard: Trying to connect to : " + MW_MAC_ADDRESS );
+        Log.i(TAG, "retrieveBoard: Trying to connect to : " + MW_MAC_ADDRESS);
         // Create a MetaWear board object for the Bluetooth Device
         board = serviceBinder.getMetaWearBoard(remoteDevice);
         board.connectAsync().onSuccessTask(new Continuation<Void, Task<Route>>() {
@@ -121,18 +141,19 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     public void configure(RouteComponent source) {
                         source.stream(new Subscriber() {
                             @Override
-                            public void apply(Data data, Object ... env) {
+                            public void apply(com.mbientlab.metawear.Data data, Object... env) {
                                 Log.i(TAG, "adc = " + data.value(Short.class));
+
                             }
                         });
                     }
                 }).continueWith(new Continuation<Route, Void>() {
                     @Override
                     public Void then(Task<Route> task) throws Exception {
-                        if(task.isFaulted()) {
-                            Log.w("freefall GPIO", "Failed to configure app", task.getError());
+                        if (task.isFaulted()) {
+                            Log.w(TAG, "Failed to configure app", task.getError());
                         } else {
-                            Log.i("freefall GPIO: ", "app configured");
+                            Log.i(TAG, "app configured");
                         }
                         return null;
                     }
@@ -143,9 +164,21 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     public void configure(RouteComponent source) {
                         source.stream(new Subscriber() {
                             @Override
-                            public void apply(Data data, Object... env) {
-                                Log.i("MainActivity", data.value(Acceleration.class).toString());
+                            public void apply(com.mbientlab.metawear.Data data, Object... env) {
+                                String tempTimeStamp = data.formattedTimestamp();
+                                Float tempX = data.value(Acceleration.class).x();
+                                Float tempY = data.value(Acceleration.class).y();
+                                Float tempZ = data.value(Acceleration.class).z();
+                                Float tempForce = new Float(Math.random());
+                                mData = new Data(tempTimeStamp, tempX, tempY,tempZ, tempForce);
+                                //Add Data to Sensor
+                                sensorData.addData(mData);
+                                //Append Temporary Data to StringBuilder
+                                Log.i(TAG, "apply: -----");
+                                Log.i(TAG, ""+sensorData.getDataList().size());
+                                Log.i(TAG, "apply: -----");
                             }
+
                         });
                     }
                 });
@@ -153,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }).continueWith(new Continuation<Route, Void>() {
             @Override
             public Void then(Task<Route> task) throws Exception {
-                if(task.isFaulted()) {
+                if (task.isFaulted()) {
                     Log.w(TAG, "Failed to configure app", task.getError());
                 } else {
                     Log.i(TAG, "app configured");
@@ -161,6 +194,27 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 return null;
             }
         });
-    }
 
+    }
+    
+    private Runnable mAccelRun = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG, "run: Start Accel");
+            accel.acceleration().start();
+            accel.start();
+        }
+    };
+    private Runnable mSetAccel = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG, "run2: Destroyed Binding");
+            Log.i(TAG, "run2: Stopping Accel");
+            accel.stop();
+            accel.acceleration().stop();
+            String tempData = sensorData.getDataString().toString();
+            new Client().execute(tempData);
+            mAccel.setText(tempData);
+        }
+    };
 }

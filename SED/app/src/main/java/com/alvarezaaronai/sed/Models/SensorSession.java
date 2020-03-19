@@ -9,6 +9,7 @@ import java.util.Date;
 public class SensorSession {
     List<Data> dataList;
     String timeStamp;
+    StringBuilder dataString;
 
     public SensorSession() {
 
@@ -21,6 +22,8 @@ public class SensorSession {
         timeStamp = sdf.format(timestamp);
         System.out.println(timeStamp);
 
+        dataString = new StringBuilder();
+
     }
 
     public boolean addData(Data dataInput){
@@ -28,8 +31,12 @@ public class SensorSession {
             System.out.println("List Is Empty");
             return false;
         }
+        if(dataList.add(dataInput)){
+            dataString.append(dataInput.toString());
+            //This will add all data onto a String.
+        }
         //Else Add Data
-        return dataList.add(dataInput);
+        return false;
     }
 
     public List<Data> getDataList() {
@@ -40,11 +47,27 @@ public class SensorSession {
         return timeStamp;
     }
 
+    public void setDataList(List<Data> dataList) {
+        this.dataList = dataList;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    public StringBuilder getDataString() {
+        return dataString;
+    }
+
+    public void setDataString(StringBuilder dataString) {
+        this.dataString = dataString;
+    }
+
     @Override
     public String toString() {
         return "SensorSession{" +
-                "dataList=" + dataList +
-                ", timeStamp='" + timeStamp + '\'' +
+                "Sensor Accel Data =" + dataList +
+                ", timeStamp='" + timeStamp + '\n' +
                 '}';
     }
 }
