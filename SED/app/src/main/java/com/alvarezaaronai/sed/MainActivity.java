@@ -45,7 +45,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     /*
         Main Activity
      */
-    private final String MW_MAC_ADDRESS = "F5:64:B2:18:F2:09";
+    //private final String MW_MAC_ADDRESS = "F5:64:B2:18:F2:09"; //Aaron Sensor
+    private final String MW_MAC_ADDRESS = "CF:95:7C:47:C6:60"; //Feng Sensor
     //If you change the Mac Address, reset Branch,
     //Only change it to test your own device.
     private SensorSession sensorData = new SensorSession();
