@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.alvarezaaronai.sed.Models.Data;
@@ -39,9 +41,13 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private MetaWearBoard board;
     private Accelerometer accel;
     private Gpio gpio;
-    private TextView mAccel;
     private Handler mHandler = new Handler();
     private StringBuilder mTempData;
+    /*
+        View Variables
+     */
+    private TextView mAccel;
+    private ProgressBar mProgressBar;
     /*
         Main Activity
      */
@@ -51,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     //Only change it to test your own device.
     private SensorSession sensorData = new SensorSession();
     private Data mData ;
-
 
     /*
         Log Tags
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             Import Member Variables
          */
         mAccel = findViewById(R.id.homeactivity_textview_accel);
+        mProgressBar = findViewById(R.id.homeactivity_progressBar_loading);
         //Clear Text View
         mAccel.setText("");
         mTempData = new StringBuilder();
@@ -77,8 +83,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         getApplicationContext().bindService(new Intent(this, BtleService.class),
                 this, Context.BIND_AUTO_CREATE);
         Log.i(TAG, "onCreate: Finished Binding Service");
-        mHandler.postDelayed(mAccelRun,5000);
-        mHandler.postDelayed(mSetAccel,15000);
+        //Gather Data
+        mProgressBar.setVisibility(View.VISIBLE);
+        mHandler.postDelayed(mAccelRun,10000);
+        mHandler.postDelayed(mSetAccel,20000);
         /*
             All Sensor Data Wil Be updated to AWS
          */
@@ -211,9 +219,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         public void run() {
             Log.i(TAG, "run2: Destroyed Binding");
             Log.i(TAG, "run2: Stopping Accel");
+
             accel.stop();
             accel.acceleration().stop();
             String tempData = sensorData.getDataString().toString();
+            mProgressBar.setVisibility(View.GONE);
             new Client().execute(tempData);
             mAccel.setText(tempData);
         }
