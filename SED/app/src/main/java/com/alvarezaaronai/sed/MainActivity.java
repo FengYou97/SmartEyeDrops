@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         View Variables
      */
     private TextView mAccel;
+    private TextView mGpio;
     private ProgressBar mProgressBar;
     /*
         Main Activity
@@ -56,8 +57,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     //If you change the Mac Address, reset Branch,
     //Only change it to test your own device.
     private SensorSession sensorData = new SensorSession();
-    private Data mData ;
-
+    private Data mData;
+    private Float mTempForce = new Float(-1);
     /*
         Log Tags
      */
@@ -71,9 +72,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             Import Member Variables
          */
         mAccel = findViewById(R.id.homeactivity_textview_accel);
+        mGpio = findViewById(R.id.homeactivity_textview_gpio);
         mProgressBar = findViewById(R.id.homeactivity_progressBar_loading);
         //Clear Text View
         mAccel.setText("");
+        mGpio.setText("");
         mTempData = new StringBuilder();
         Log.i(TAG, "onCreate: Binding Service");
         /*
@@ -85,27 +88,24 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         Log.i(TAG, "onCreate: Finished Binding Service");
         //Gather Data
         mProgressBar.setVisibility(View.VISIBLE);
-        mHandler.postDelayed(mAccelRun,10000);
-        mHandler.postDelayed(mSetAccel,20000);
+        mHandler.postDelayed(mAccelRun, 15000);
+        mHandler.postDelayed(mSetAccel, 30000);
+        mHandler.postDelayed(mGpioRun, 15000);
+        mHandler.postDelayed(mSetGpio, 30000);
         /*
             All Sensor Data Wil Be updated to AWS
          */
-        //Use this to send to Server: replace "t1" with the data in String format
-        //place this part of the code in the area where data is collected so that it can be sent
-//        String t1 = "time,x,y,z,force\n" +
-//                "10,0.2,0.2,0.2,100";
-//
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "onDestroy: Destroyed Binding");
-        Log.i(TAG, "onDestroy: Stoping Accel");
-        accel.stop();
-        accel.acceleration().stop();
+        Log.i(TAG, "onDestroy: Destroyed Binding : Again");
         // Unbind the service when the activity is destroyed
+        //Todo Unbind when Destroyed
         getApplicationContext().unbindService(this);
+
     }
 
     @Override
@@ -114,48 +114,50 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         serviceBinder = (BtleService.LocalBinder) service;
         Log.i(TAG, "onServiceConnected: Service Connected : " + service.toString());
         retrieveBoard();
+        retrieveBoard2();
     }
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
+        Log.i(TAG, "onServiceDisconnected: Service Disconnected");
     }
 
     /*
      *Methods HomeActivity
      */
-    public void retrieveBoard2(){
-        gpio = board.getModule(Gpio.class);
-        ForcedDataProducer adc = gpio.pin((byte) 1).analogAdc();
-        board.connectAsync().onSuccessTask(new Continuation<Void, Task<Route>>() {
+    //Retrieve GPIO
+    public void retrieveBoard2() {
+        final BluetoothManager btManager =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothDevice remoteDevice =
+                btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
+        Log.i(TAG, "retrieveBoard: Trying to connect to : " + MW_MAC_ADDRESS);
+        // Create a MetaWear board object for the Bluetooth Device
+        board = serviceBinder.getMetaWearBoard(remoteDevice);
+        board.connectAsync().onSuccessTask(task -> {
+            gpio = board.getModule(Gpio.class);
+            ForcedDataProducer adc = gpio.pin((byte) 1).analogAdc();
 
-            @Override
-            public Task<Route> then(Task<Void> task) throws Exception {
+            Log.i(TAG, "retrieveBoard2: ADC");
+            return adc.addRouteAsync(source -> source.stream(new Subscriber() {
+                @Override
+                public void apply(com.mbientlab.metawear.Data data, Object... env) {
+                    mTempForce = data.value(Short.class).floatValue();
+                    Log.i(TAG, "adc = " + mTempForce); // Track : GPIO
 
-                 return adc.addRouteAsync(new RouteBuilder() {
-                    @Override
-                    public void configure(RouteComponent source) {
-                        source.stream(new Subscriber() {
-                            @Override
-                            public void apply(com.mbientlab.metawear.Data data, Object... env) {
-                                Log.i(TAG, "adc = " + data.value(Short.class));
-
-                            }
-                        });
-                    }
-                });
-            }
-        }).continueWith(new Continuation<Route, Void>() {
-            @Override
-            public Void then(Task<Route> task) throws Exception {
-                if (task.isFaulted()) {
-                    Log.w(TAG, "Failed to configure app", task.getError());
-                } else {
-                    Log.i(TAG, "app configured");
                 }
-                return null;
+            }));
+        }).continueWith((Continuation<Route, Void>) task -> {
+            if (task.isFaulted()) {
+                Log.w(TAG, "Failed to configure app : GPIO", task.getError());
+            } else {
+                Log.i(TAG, "app configured : GPIO");
             }
+            return null;
         });
     }
+
+    //Retrieve Accel
     public void retrieveBoard() {
         final BluetoothManager btManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -164,54 +166,42 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         Log.i(TAG, "retrieveBoard: Trying to connect to : " + MW_MAC_ADDRESS);
         // Create a MetaWear board object for the Bluetooth Device
         board = serviceBinder.getMetaWearBoard(remoteDevice);
-        board.connectAsync().onSuccessTask(new Continuation<Void, Task<Route>>() {
-            @Override
-            public Task<Route> then(Task<Void> task) throws Exception {
+        board.connectAsync().onSuccessTask(task -> {
 
-                Log.i(TAG, "connected to: " + MW_MAC_ADDRESS);
+            Log.i(TAG, "connected to: " + MW_MAC_ADDRESS);
 
-                accel = board.getModule(Accelerometer.class);
-                accel.configure()
-                        .odr(30f)       // Set sampling frequency to 30Hz, or closest valid ODR
-                        .range(4f)      // Set data range to +/-4g, or closet valid range
-                        .commit();
+            accel = board.getModule(Accelerometer.class);
+            accel.configure()
+                    .odr(30f)       // Set sampling frequency to 30Hz, or closest valid ODR
+                    .range(4f)      // Set data range to +/-4g, or closet valid range
+                    .commit();
 
-                return accel.acceleration().addRouteAsync(new RouteBuilder() {
-                    @Override
-                    public void configure(RouteComponent source) {
-                        source.stream(new Subscriber() {
-                            @Override
-                            public void apply(com.mbientlab.metawear.Data data, Object... env) {
-                                String tempTimeStamp = data.formattedTimestamp();
-                                Float tempX = data.value(Acceleration.class).x();
-                                Float tempY = data.value(Acceleration.class).y();
-                                Float tempZ = data.value(Acceleration.class).z();
-                                Float tempForce = new Float(Math.random());
-                                mData = new Data(tempTimeStamp, tempX, tempY,tempZ, tempForce);
-                                //Add Data to Sensor
-                                sensorData.addData(mData);
-                                //Append Temporary Data to StringBuilder
-                                Log.i(TAG, ""+sensorData.getDataList().size());
-                            }
-
-                        });
-                    }
-                });
-            }
-        }).continueWith(new Continuation<Route, Void>() {
-            @Override
-            public Void then(Task<Route> task) throws Exception {
-                if (task.isFaulted()) {
-                    Log.w(TAG, "Failed to configure app", task.getError());
-                } else {
-                    Log.i(TAG, "app configured");
+            return accel.acceleration().addRouteAsync(source -> source.stream(new Subscriber() {
+                @Override
+                public void apply(com.mbientlab.metawear.Data data, Object... env) {
+                    String tempTimeStamp = data.formattedTimestamp();
+                    Float tempX = data.value(Acceleration.class).x();
+                    Float tempY = data.value(Acceleration.class).y();
+                    Float tempZ = data.value(Acceleration.class).z();
+                    Float tempForce = mTempForce; //mTempForce if = -1, Data is Invalid
+                    mData = new Data(tempTimeStamp, tempX, tempY, tempZ, tempForce);
+                    //Add Data to Sensor
+                    sensorData.addData(mData);
+                    Log.d(TAG, "apply() returned: " + mData.toString()); // Track : Accel
                 }
-                return null;
+
+            }));
+        }).continueWith((Continuation<Route, Void>) task -> {
+            if (task.isFaulted()) {
+                Log.w(TAG, "Failed to configure app : Accel", task.getError());
+            } else {
+                Log.i(TAG, "app configured : Accel");
             }
+            return null;
         });
 
     }
-    
+
     private Runnable mAccelRun = new Runnable() {
         @Override
         public void run() {
@@ -223,15 +213,40 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private Runnable mSetAccel = new Runnable() {
         @Override
         public void run() {
+            mProgressBar.setVisibility(View.GONE);
+            Log.v(TAG, "run: Data Size : \n " + sensorData.getDataList().size());
             Log.i(TAG, "run2: Destroyed Binding");
             Log.i(TAG, "run2: Stopping Accel");
 
             accel.stop();
             accel.acceleration().stop();
             String tempData = sensorData.getDataString().toString();
-            mProgressBar.setVisibility(View.GONE);
-            new Client().execute(tempData);
+            //Set TextView Data
             mAccel.setText(tempData);
+            new Client().execute(tempData); // TODO : Send Data to Cloud
         }
     };
+    private Runnable mGpioRun = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG, "run: Starting Pin GPIO");
+            gpio.pin((byte) 1).monitor().start();
+
+        }
+    };
+    private Runnable mSetGpio = new Runnable() {
+        @Override
+        public void run() {
+
+            Log.i(TAG, "run: Stoping Pin GPIO");
+            Log.i(TAG, "run: Unbinding ");
+            gpio.pin((byte) 1).monitor().stop();
+            //Unbind After X Amount of time
+            //This Unbinds all sensors / Stops all sensors
+            getApplicationContext().unbindService(MainActivity.this);
+
+
+        }
+    };
+
 }
