@@ -123,6 +123,39 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     /*
      *Methods HomeActivity
      */
+    public void retrieveBoard2(){
+        gpio = board.getModule(Gpio.class);
+        ForcedDataProducer adc = gpio.pin((byte) 1).analogAdc();
+        board.connectAsync().onSuccessTask(new Continuation<Void, Task<Route>>() {
+
+            @Override
+            public Task<Route> then(Task<Void> task) throws Exception {
+
+                 return adc.addRouteAsync(new RouteBuilder() {
+                    @Override
+                    public void configure(RouteComponent source) {
+                        source.stream(new Subscriber() {
+                            @Override
+                            public void apply(com.mbientlab.metawear.Data data, Object... env) {
+                                Log.i(TAG, "adc = " + data.value(Short.class));
+
+                            }
+                        });
+                    }
+                });
+            }
+        }).continueWith(new Continuation<Route, Void>() {
+            @Override
+            public Void then(Task<Route> task) throws Exception {
+                if (task.isFaulted()) {
+                    Log.w(TAG, "Failed to configure app", task.getError());
+                } else {
+                    Log.i(TAG, "app configured");
+                }
+                return null;
+            }
+        });
+    }
     public void retrieveBoard() {
         final BluetoothManager btManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -143,31 +176,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         .range(4f)      // Set data range to +/-4g, or closet valid range
                         .commit();
 
-                gpio = board.getModule(Gpio.class);
-                ForcedDataProducer adc = gpio.pin((byte) 1).analogAdc();
-                adc.addRouteAsync(new RouteBuilder() {
-                    @Override
-                    public void configure(RouteComponent source) {
-                        source.stream(new Subscriber() {
-                            @Override
-                            public void apply(com.mbientlab.metawear.Data data, Object... env) {
-                                Log.i(TAG, "adc = " + data.value(Short.class));
-
-                            }
-                        });
-                    }
-                }).continueWith(new Continuation<Route, Void>() {
-                    @Override
-                    public Void then(Task<Route> task) throws Exception {
-                        if (task.isFaulted()) {
-                            Log.w(TAG, "Failed to configure app", task.getError());
-                        } else {
-                            Log.i(TAG, "app configured");
-                        }
-                        return null;
-                    }
-                });
-
                 return accel.acceleration().addRouteAsync(new RouteBuilder() {
                     @Override
                     public void configure(RouteComponent source) {
@@ -183,9 +191,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                 //Add Data to Sensor
                                 sensorData.addData(mData);
                                 //Append Temporary Data to StringBuilder
-                                Log.i(TAG, "apply: -----");
                                 Log.i(TAG, ""+sensorData.getDataList().size());
-                                Log.i(TAG, "apply: -----");
                             }
 
                         });
