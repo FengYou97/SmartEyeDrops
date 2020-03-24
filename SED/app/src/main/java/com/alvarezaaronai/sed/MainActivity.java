@@ -53,14 +53,16 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
      */
     //private final String MW_MAC_ADDRESS = "F5:64:B2:18:F2:09"; //Aaron Sensor
     private final String MW_MAC_ADDRESS = "CF:95:7C:47:C6:60"; //Feng Sensor
-    //If you change the Mac Address, reset Branch,
-    //Only change it to test your own device.
+                                                                //If you change the Mac Address, reset Branch,
+                                                                //Only change it to test your own device.
+    // Data Storage for Live View
     private SensorSession sensorData = new SensorSession();
     private Data mData;
     private Float mTempForce;
     /*
         Log Tags
      */
+
     private static final String TAG = "HomeActivity";
 
     @Override
@@ -88,9 +90,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
            Retrieve Sensor Data After X Amount of Time
          */
         mProgressBar.setVisibility(View.VISIBLE);
-        mHandler.postDelayed(mAccelRun, 15000);
+        mHandler.postDelayed(mAccelRun, 10000);
         mHandler.postDelayed(mSetAccel, 30000);
-        mHandler.postDelayed(mGpioRun, 15000);
+        mHandler.postDelayed(mGpioRun, 10000);
         mHandler.postDelayed(mSetGpio, 30000);
 
     }
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     /*
        Methods HomeActivity
      */
+
     //Retrieve GPIO
     public void activateGPIO() {
         final BluetoothManager btManager =
