@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         View Variables
      */
     private TextView mAccel;
-    private TextView mGpio;
     private ProgressBar mProgressBar;
     /*
         Main Activity
@@ -58,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     //Only change it to test your own device.
     private SensorSession sensorData = new SensorSession();
     private Data mData;
-    private Float mTempForce = new Float(-1);
+    private Float mTempForce;
     /*
         Log Tags
      */
@@ -72,61 +71,35 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             Import Member Variables
          */
         mAccel = findViewById(R.id.homeactivity_textview_accel);
-        mGpio = findViewById(R.id.homeactivity_textview_gpio);
         mProgressBar = findViewById(R.id.homeactivity_progressBar_loading);
-        //Clear Text View
+        //Set Default Values
         mAccel.setText("");
-        mGpio.setText("");
         mTempData = new StringBuilder();
+        mTempForce = (float) -1; //Default Value -1
         Log.i(TAG, "onCreate: Binding Service");
         /*
            Bind a Connection Service / Disconnect when App is close
          */
-        // Bind the service when the activity is created
+        // Connect Sensor
         getApplicationContext().bindService(new Intent(this, BtleService.class),
                 this, Context.BIND_AUTO_CREATE);
         Log.i(TAG, "onCreate: Finished Binding Service");
-        //Gather Data
+        /*
+           Retrieve Sensor Data After X Amount of Time
+         */
         mProgressBar.setVisibility(View.VISIBLE);
         mHandler.postDelayed(mAccelRun, 15000);
         mHandler.postDelayed(mSetAccel, 30000);
         mHandler.postDelayed(mGpioRun, 15000);
         mHandler.postDelayed(mSetGpio, 30000);
-        /*
-            All Sensor Data Wil Be updated to AWS
-         */
 
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "onDestroy: Destroyed Binding : Again");
-        // Unbind the service when the activity is destroyed
-        //Todo Unbind when Destroyed
-        getApplicationContext().unbindService(this);
-
-    }
-
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        // Typecast the binder to the service's LocalBinder class
-        serviceBinder = (BtleService.LocalBinder) service;
-        Log.i(TAG, "onServiceConnected: Service Connected : " + service.toString());
-        retrieveBoard();
-        retrieveBoard2();
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName componentName) {
-        Log.i(TAG, "onServiceDisconnected: Service Disconnected");
     }
 
     /*
-     *Methods HomeActivity
+       Methods HomeActivity
      */
     //Retrieve GPIO
-    public void retrieveBoard2() {
+    public void activateGPIO() {
         final BluetoothManager btManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         final BluetoothDevice remoteDevice =
@@ -142,8 +115,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             return adc.addRouteAsync(source -> source.stream(new Subscriber() {
                 @Override
                 public void apply(com.mbientlab.metawear.Data data, Object... env) {
-                    mTempForce = data.value(Short.class).floatValue();
-                    Log.i(TAG, "adc = " + mTempForce); // Track : GPIO
+                    Float tempForce = data.value(Short.class).floatValue();
+                    mTempForce = tempForce;
+                    Log.i(TAG, "adc = " + mTempForce + " : Real = " + tempForce); // Track : GPIO
 
                 }
             }));
@@ -158,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     //Retrieve Accel
-    public void retrieveBoard() {
+    public void activateAccel() {
         final BluetoothManager btManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         final BluetoothDevice remoteDevice =
@@ -202,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     }
 
+    //Thread to Monitor Accel
     private Runnable mAccelRun = new Runnable() {
         @Override
         public void run() {
@@ -226,6 +201,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             new Client().execute(tempData); // TODO : Send Data to Cloud
         }
     };
+    //Thread to Monitor GPIO
     private Runnable mGpioRun = new Runnable() {
         @Override
         public void run() {
@@ -248,5 +224,37 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         }
     };
+
+    /*
+       Override Methods : Needed MetaWear
+     */
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        // Typecast the binder to the service's LocalBinder class
+        serviceBinder = (BtleService.LocalBinder) service;
+        Log.i(TAG, "onServiceConnected: Service Connected : " + service.toString());
+        activateAccel();
+        activateGPIO();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+        Log.i(TAG, "onServiceDisconnected: Service Disconnected");
+    }
+
+    /*
+        Android Life Cycle
+     */
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "onDestroy: Destroyed Binding : Again");
+        // Unbind the service when the activity is destroyed
+        //Todo Unbind when Destroyed
+        getApplicationContext().unbindService(this);
+
+    }
 
 }
