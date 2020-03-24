@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class SensorSession {
-    List<Data> dataList;
-    String timeStamp;
-    StringBuilder dataString;
+    private List<Data> dataList;
+    private String timeStamp;
+    private StringBuilder dataString;
 
     public SensorSession() {
 
