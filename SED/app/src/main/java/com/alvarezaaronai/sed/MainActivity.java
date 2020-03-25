@@ -2,242 +2,262 @@ package com.alvarezaaronai.sed;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.charts.ScatterChart;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.alvarezaaronai.sed.Models.Data;
+import com.alvarezaaronai.sed.Models.SensorSession;
+import com.mbientlab.metawear.ForcedDataProducer;
+import com.mbientlab.metawear.MetaWearBoard;
+import com.mbientlab.metawear.Route;
+import com.mbientlab.metawear.Subscriber;
+import com.mbientlab.metawear.android.BtleService;
+import com.mbientlab.metawear.builder.RouteBuilder;
+import com.mbientlab.metawear.builder.RouteComponent;
+import com.mbientlab.metawear.data.Acceleration;
+import com.mbientlab.metawear.module.Accelerometer;
+import com.mbientlab.metawear.module.Gpio;
 
-import java.util.ArrayList;
-import java.util.Map;
+import bolts.Continuation;
+import bolts.Task;
 
-import butterknife.BindView;
+public class MainActivity extends AppCompatActivity implements ServiceConnection {
+    //Variables
+    /*
+        MetaWear
+     */
+    private BtleService.LocalBinder serviceBinder;
+    private MetaWearBoard board;
+    private Accelerometer accel;
+    private Gpio gpio;
+    private Handler mHandler = new Handler();
+    private StringBuilder mTempData;
+    /*
+        View Variables
+     */
+    private TextView mAccel;
+    private ProgressBar mProgressBar;
+    /*
+        Main Activity
+     */
+    //private final String MW_MAC_ADDRESS = "F5:64:B2:18:F2:09"; //Aaron Sensor
+    private final String MW_MAC_ADDRESS = "CF:95:7C:47:C6:60"; //Feng Sensor
+                                                                //If you change the Mac Address, reset Branch,
+                                                                //Only change it to test your own device.
+    // Data Storage for Live View
+    private SensorSession sensorData = new SensorSession();
+    private Data mData;
+    private Float mTempForce;
+    /*
+        Log Tags
+     */
 
-public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "HomeActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        LineChart mScatterChart = findViewById(R.id.scatter_usage);
-        LineDataSet lineDataSet = new LineDataSet(addDataValues(), "Data Set 1");
+        /*
+            Import Member Variables
+         */
+        mAccel = findViewById(R.id.homeactivity_textview_accel);
+        mProgressBar = findViewById(R.id.homeactivity_progressBar_loading);
+        //Set Default Values
+        mAccel.setText("");
+        mTempData = new StringBuilder();
+        mTempForce = (float) -1; //Default Value -1
+        Log.i(TAG, "onCreate: Binding Service");
+        /*
+           Bind a Connection Service / Disconnect when App is close
+         */
+        // Connect Sensor
+        getApplicationContext().bindService(new Intent(this, BtleService.class),
+                this, Context.BIND_AUTO_CREATE);
+        Log.i(TAG, "onCreate: Finished Binding Service");
+        /*
+           Retrieve Sensor Data After X Amount of Time
+         */
+        mProgressBar.setVisibility(View.VISIBLE);
+        mHandler.postDelayed(mAccelRun, 10000);
+        mHandler.postDelayed(mSetAccel, 30000);
+        mHandler.postDelayed(mGpioRun, 10000);
+        mHandler.postDelayed(mSetGpio, 30000);
 
-        ArrayList<ILineDataSet> iLineDataSets = new ArrayList<>();
-        iLineDataSets.add(lineDataSet);
-
-        LineData lineData = new LineData(iLineDataSets);
-        mScatterChart.setData(lineData);
-        mScatterChart.invalidate();
-}
-
-    private ArrayList<Entry>addDataValues(){
-        ArrayList<Entry> dataValues = new ArrayList<>();
-        dataValues.add(new Entry(0,20));
-        dataValues.add(new Entry(1,22));
-        dataValues.add(new Entry(2,24));
-
-        return dataValues;
     }
-}
 
-//Butter Knife Example... To use Following for easier use... TODO Move to a different File soon.
-/**
- * Quick Example.... (Use R2 instead of R)
- * class ExampleActivity extends Activity {
- *   @BindView(R2.id.user) EditText username;
- *   @BindView(R2.id.pass) EditText password;
- * ...
- * }
- * Introduction
- * Annotate fields with @BindView and a view ID for Butter Knife to find and automatically cast the corresponding view in your layout.
- *
- * class ExampleActivity extends Activity {
- *   @BindView(R.id.title) TextView title;
- *   @BindView(R.id.subtitle) TextView subtitle;
- *   @BindView(R.id.footer) TextView footer;
- *
- *   @Override public void onCreate(Bundle savedInstanceState) {
- *     super.onCreate(savedInstanceState);
- *     setContentView(R.layout.simple_activity);
- *     ButterKnife.bind(this);
- *     // TODO Use fields...
- *   }
- * }
- * Instead of slow reflection, code is generated to perform the view look-ups. Calling bind delegates to this generated code that you can see and debug.
- *
- * The generated code for the above example is roughly equivalent to the following:
- *
- * public void bind(ExampleActivity activity) {
- *   activity.subtitle = (android.widget.TextView) activity.findViewById(2130968578);
- *   activity.footer = (android.widget.TextView) activity.findViewById(2130968579);
- *   activity.title = (android.widget.TextView) activity.findViewById(2130968577);
- * }
- * RESOURCE BINDING
- * Bind pre-defined resources with @BindBool, @BindColor, @BindDimen, @BindDrawable, @BindInt, @BindString, which binds an R.bool ID (or your specified type) to its corresponding field.
- *
- * class ExampleActivity extends Activity {
- *   @BindString(R.string.title) String title;
- *   @BindDrawable(R.drawable.graphic) Drawable graphic;
- *   @BindColor(R.color.red) int red; // int or ColorStateList field
- *   @BindDimen(R.dimen.spacer) float spacer; // int (for pixel size) or float (for exact value) field
- *   // ...
- * }
- * NON-ACTIVITY BINDING
- * You can also perform binding on arbitrary objects by supplying your own view root.
- *
- * public class FancyFragment extends Fragment {
- *   @BindView(R.id.button1) Button button1;
- *   @BindView(R.id.button2) Button button2;
- *
- *   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
- *     View view = inflater.inflate(R.layout.fancy_fragment, container, false);
- *     ButterKnife.bind(this, view);
- *     // TODO Use fields...
- *     return view;
- *   }
- * }
- * Another use is simplifying the view holder pattern inside of a list adapter.
- *
- * public class MyAdapter extends BaseAdapter {
- *   @Override public View getView(int position, View view, ViewGroup parent) {
- *     ViewHolder holder;
- *     if (view != null) {
- *       holder = (ViewHolder) view.getTag();
- *     } else {
- *       view = inflater.inflate(R.layout.whatever, parent, false);
- *       holder = new ViewHolder(view);
- *       view.setTag(holder);
- *     }
- *
- *     holder.name.setText("John Doe");
- *     // etc...
- *
- *     return view;
- *   }
- *
- *   static class ViewHolder {
- *     @BindView(R.id.title) TextView name;
- *     @BindView(R.id.job_title) TextView jobTitle;
- *
- *     public ViewHolder(View view) {
- *       ButterKnife.bind(this, view);
- *     }
- *   }
- * }
- * You can see this implementation in action in the provided sample.
- *
- * Calls to ButterKnife.bind can be made anywhere you would otherwise put findViewById calls.
- *
- * Other provided binding APIs:
- *
- * Bind arbitrary objects using an activity as the view root. If you use a pattern like MVC you can bind the controller using its activity with ButterKnife.bind(this, activity).
- * Bind a view's children into fields using ButterKnife.bind(this). If you use <merge> tags in a layout and inflate in a custom view constructor you can call this immediately after. Alternatively, custom view types inflated from XML can use it in the onFinishInflate() callback.
- * VIEW LISTS
- * You can group multiple views into a List or array.
- *
- * @BindViews({ R.id.first_name, R.id.middle_name, R.id.last_name })
- * List<EditText> nameViews;
- * The apply method allows you to act on all the views in a list at once.
- *
- * ButterKnife.apply(nameViews, DISABLE);
- * ButterKnife.apply(nameViews, ENABLED, false);
- * Action and Setter interfaces allow specifying simple behavior.
- *
- * static final ButterKnife.Action<View> DISABLE = new ButterKnife.Action<View>() {
- *   @Override public void apply(View view, int index) {
- *     view.setEnabled(false);
- *   }
- * };
- * static final ButterKnife.Setter<View, Boolean> ENABLED = new ButterKnife.Setter<View, Boolean>() {
- *   @Override public void set(View view, Boolean value, int index) {
- *     view.setEnabled(value);
- *   }
- * };
- * An Android Property can also be used with the apply method.
- *
- * ButterKnife.apply(nameViews, View.ALPHA, 0.0f);
- * LISTENER BINDING
- * Listeners can also automatically be configured onto methods.
- *
- * @OnClick(R.id.submit)
- * public void submit(View view) {
- *   // TODO submit data to server...
- * }
- * All arguments to the listener method are optional.
- *
- * @OnClick(R.id.submit)
- * public void submit() {
- *   // TODO submit data to server...
- * }
- * Define a specific type and it will automatically be cast.
- *
- * @OnClick(R.id.submit)
- * public void sayHi(Button button) {
- *   button.setText("Hello!");
- * }
- * Specify multiple IDs in a single binding for common event handling.
- *
- * @OnClick({ R.id.door1, R.id.door2, R.id.door3 })
- * public void pickDoor(DoorView door) {
- *   if (door.hasPrizeBehind()) {
- *     Toast.makeText(this, "You win!", LENGTH_SHORT).show();
- *   } else {
- *     Toast.makeText(this, "Try again", LENGTH_SHORT).show();
- *   }
- * }
- * Custom views can bind to their own listeners by not specifying an ID.
- *
- * public class FancyButton extends Button {
- *   @OnClick
- *   public void onClick() {
- *     // TODO do something!
- *   }
- * }
- * BINDING RESET
- * Fragments have a different view lifecycle than activities. When binding a fragment in onCreateView, set the views to null in onDestroyView. Butter Knife returns an Unbinder instance when you call bind to do this for you. Call its unbind method in the appropriate lifecycle callback.
- *
- * public class FancyFragment extends Fragment {
- *   @BindView(R.id.button1) Button button1;
- *   @BindView(R.id.button2) Button button2;
- *   private Unbinder unbinder;
- *
- *   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
- *     View view = inflater.inflate(R.layout.fancy_fragment, container, false);
- *     unbinder = ButterKnife.bind(this, view);
- *     // TODO Use fields...
- *     return view;
- *   }
- *
- *   @Override public void onDestroyView() {
- *     super.onDestroyView();
- *     unbinder.unbind();
- *   }
- * }
- * OPTIONAL BINDINGS
- * By default, both @Bind and listener bindings are required. An exception will be thrown if the target view cannot be found.
- *
- * To suppress this behavior and create an optional binding, add a @Nullable annotation to fields or the @Optional annotation to methods.
- *
- * Note: Any annotation named @Nullable can be used for fields. It is encouraged to use the @Nullable annotation from Android's "support-annotations" library.
- *
- * @Nullable @BindView(R.id.might_not_be_there) TextView mightNotBeThere;
- *
- * @Optional @OnClick(R.id.maybe_missing) void onMaybeMissingClicked() {
- *   // TODO ...
- * }
- * MULTI-METHOD LISTENERS
- * Method annotations whose corresponding listener has multiple callbacks can be used to bind to any one of them. Each annotation has a default callback that it binds to. Specify an alternate using the callback parameter.
- *
- * @OnItemSelected(R.id.list_view)
- * void onItemSelected(int position) {
- *   // TODO ...
- * }
- *
- * @OnItemSelected(value = R.id.maybe_missing, callback = NOTHING_SELECTED)
- * void onNothingSelected() {
- *   // TODO ...
- * }
- */
+    /*
+       Methods HomeActivity
+     */
+
+    //Retrieve GPIO
+    public void activateGPIO() {
+        final BluetoothManager btManager =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothDevice remoteDevice =
+                btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
+        Log.i(TAG, "retrieveBoard: Trying to connect to : " + MW_MAC_ADDRESS);
+        // Create a MetaWear board object for the Bluetooth Device
+        board = serviceBinder.getMetaWearBoard(remoteDevice);
+        board.connectAsync().onSuccessTask(task -> {
+            gpio = board.getModule(Gpio.class);
+            ForcedDataProducer adc = gpio.pin((byte) 1).analogAdc();
+
+            Log.i(TAG, "retrieveBoard2: ADC");
+            return adc.addRouteAsync(source -> source.stream(new Subscriber() {
+                @Override
+                public void apply(com.mbientlab.metawear.Data data, Object... env) {
+                    Float tempForce = data.value(Short.class).floatValue();
+                    mTempForce = tempForce;
+                    Log.i(TAG, "adc = " + mTempForce + " : Real = " + tempForce); // Track : GPIO
+
+                }
+            }));
+        }).continueWith((Continuation<Route, Void>) task -> {
+            if (task.isFaulted()) {
+                Log.w(TAG, "Failed to configure app : GPIO", task.getError());
+            } else {
+                Log.i(TAG, "app configured : GPIO");
+            }
+            return null;
+        });
+    }
+
+    //Retrieve Accel
+    public void activateAccel() {
+        final BluetoothManager btManager =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothDevice remoteDevice =
+                btManager.getAdapter().getRemoteDevice(MW_MAC_ADDRESS);
+        Log.i(TAG, "retrieveBoard: Trying to connect to : " + MW_MAC_ADDRESS);
+        // Create a MetaWear board object for the Bluetooth Device
+        board = serviceBinder.getMetaWearBoard(remoteDevice);
+        board.connectAsync().onSuccessTask(task -> {
+
+            Log.i(TAG, "connected to: " + MW_MAC_ADDRESS);
+
+            accel = board.getModule(Accelerometer.class);
+            accel.configure()
+                    .odr(30f)       // Set sampling frequency to 30Hz, or closest valid ODR
+                    .range(4f)      // Set data range to +/-4g, or closet valid range
+                    .commit();
+
+            return accel.acceleration().addRouteAsync(source -> source.stream(new Subscriber() {
+                @Override
+                public void apply(com.mbientlab.metawear.Data data, Object... env) {
+                    String tempTimeStamp = data.formattedTimestamp();
+                    Float tempX = data.value(Acceleration.class).x();
+                    Float tempY = data.value(Acceleration.class).y();
+                    Float tempZ = data.value(Acceleration.class).z();
+                    Float tempForce = mTempForce; //mTempForce if = -1, Data is Invalid
+                    mData = new Data(tempTimeStamp, tempX, tempY, tempZ, tempForce);
+                    //Add Data to Sensor
+                    sensorData.addData(mData);
+                    Log.d(TAG, "apply() returned: " + mData.toString()); // Track : Accel
+                }
+
+            }));
+        }).continueWith((Continuation<Route, Void>) task -> {
+            if (task.isFaulted()) {
+                Log.w(TAG, "Failed to configure app : Accel", task.getError());
+            } else {
+                Log.i(TAG, "app configured : Accel");
+            }
+            return null;
+        });
+
+    }
+
+    //Thread to Monitor Accel
+    private Runnable mAccelRun = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG, "run: Start Accel");
+            accel.acceleration().start();
+            accel.start();
+        }
+    };
+    private Runnable mSetAccel = new Runnable() {
+        @Override
+        public void run() {
+            mProgressBar.setVisibility(View.GONE);
+            Log.v(TAG, "run: Data Size : \n " + sensorData.getDataList().size());
+            Log.i(TAG, "run2: Destroyed Binding");
+            Log.i(TAG, "run2: Stopping Accel");
+
+            accel.stop();
+            accel.acceleration().stop();
+            String tempData = sensorData.getDataString().toString();
+            //Set TextView Data
+            mAccel.setText(tempData);
+            new Client().execute(tempData); // TODO : Send Data to Cloud
+        }
+    };
+    //Thread to Monitor GPIO
+    private Runnable mGpioRun = new Runnable() {
+        @Override
+        public void run() {
+            Log.i(TAG, "run: Starting Pin GPIO");
+            gpio.pin((byte) 1).monitor().start();
+
+        }
+    };
+    private Runnable mSetGpio = new Runnable() {
+        @Override
+        public void run() {
+
+            Log.i(TAG, "run: Stoping Pin GPIO");
+            Log.i(TAG, "run: Unbinding ");
+            gpio.pin((byte) 1).monitor().stop();
+            //Unbind After X Amount of time
+            //This Unbinds all sensors / Stops all sensors
+            getApplicationContext().unbindService(MainActivity.this);
+
+
+        }
+    };
+
+    /*
+       Override Methods : Needed MetaWear
+     */
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        // Typecast the binder to the service's LocalBinder class
+        serviceBinder = (BtleService.LocalBinder) service;
+        Log.i(TAG, "onServiceConnected: Service Connected : " + service.toString());
+        activateAccel();
+        activateGPIO();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+        Log.i(TAG, "onServiceDisconnected: Service Disconnected");
+    }
+
+    /*
+        Android Life Cycle
+     */
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "onDestroy: Destroyed Binding : Again");
+        // Unbind the service when the activity is destroyed
+        //Todo Unbind when Destroyed
+        getApplicationContext().unbindService(this);
+
+    }
+
+}
