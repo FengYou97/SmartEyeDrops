@@ -56,7 +56,7 @@ public class PhysicianProfileActivity extends AppCompatActivity {
     public void initPhysicianProfile() {
         // For Testing purposes only!!!
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://9l27z1ir6b.execute-api.us-west-2.amazonaws.com/prod/")
+                .baseUrl("https://od2h1ov7je.execute-api.us-west-1.amazonaws.com/prod/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 

@@ -1,5 +1,6 @@
 package com.alvarezaaronai.sed.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,8 @@ public class PhysicianRecyclerViewAdapter extends RecyclerView.Adapter<Physician
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+
+        Log.d(TAG, "onBindViewHolder: Patient Id: " + mPatients.get(position).getPatient_id());
 
         // Use Picasso to load image into CircleImageView
         Picasso.get().load(mPatients.get((position)).getPatient_image()).into(holder.patientImage);

@@ -10,6 +10,12 @@ public class Patient {
 
     private String patient_image;
 
+    private int patient_id;
+
+    public int getPatient_id() {
+        return patient_id;
+    }
+
     public String getPatient_image() {
         return patient_image;
     }
@@ -25,5 +31,7 @@ public class Patient {
     public String getEmail() {
         return email;
     }
+
+
 }
 
