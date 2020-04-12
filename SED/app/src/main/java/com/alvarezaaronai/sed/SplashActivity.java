@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 
+import com.alvarezaaronai.sed.Models.Physician;
+
 public class SplashActivity extends AppCompatActivity {
 
     @Override
@@ -23,7 +25,7 @@ public class SplashActivity extends AppCompatActivity {
         // Changing this just to test out the ScatterChart
         EasySplashScreen config = new EasySplashScreen(SplashActivity.this)
                 .withFullScreen()
-                .withTargetActivity(PatientAdherenceActivity.class)
+                .withTargetActivity(PhysicianProfileActivity.class)
                 .withSplashTimeOut(3000)
                 .withAfterLogoText("Smart Eye Drops")
                 .withFooterText("Sponsored by Vodafone")

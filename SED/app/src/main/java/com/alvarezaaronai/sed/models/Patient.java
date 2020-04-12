@@ -1,4 +1,4 @@
-package com.alvarezaaronai.sed.models;
+package com.alvarezaaronai.sed.Models;
 
 public class Patient {
 

@@ -14,9 +14,10 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.alvarezaaronai.sed.Models.Physician;
 import com.alvarezaaronai.sed.adapters.PhysicianRecyclerViewAdapter;
-import com.alvarezaaronai.sed.models.Patient;
-import com.alvarezaaronai.sed.models.Physician;
+import com.alvarezaaronai.sed.Models.Patient;
+
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;

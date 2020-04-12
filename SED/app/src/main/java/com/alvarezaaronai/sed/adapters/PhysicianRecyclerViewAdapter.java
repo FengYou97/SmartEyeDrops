@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.alvarezaaronai.sed.R;
-import com.alvarezaaronai.sed.models.Patient;
+import com.alvarezaaronai.sed.Models.Patient;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
