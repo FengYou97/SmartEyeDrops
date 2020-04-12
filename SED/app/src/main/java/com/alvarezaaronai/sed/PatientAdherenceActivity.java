@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.alvarezaaronai.sed.utils.AdherenceXAxisFormatter;
+import com.alvarezaaronai.sed.utils.AdherenceYAxisFormatter;
 import com.github.mikephil.charting.charts.ScatterChart;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
@@ -51,6 +53,17 @@ public class PatientAdherenceActivity extends AppCompatActivity {
     private void configureScatterChart() {
         // Configure ScatterChart
         mScatterChart.setTouchEnabled(false); // Disables interaction with graph
+
+        // YAxis
+        mScatterChart.getAxisRight().setEnabled(false);// Remove right labels
+        YAxis yLeftAxis = mScatterChart.getAxisLeft();
+        yLeftAxis.setAxisMaximum(25.0f);
+        yLeftAxis.setAxisMinimum(0.0f);
+        // Will allow us to see 24 labels. Which we'll use to display all 24 hours of a day
+        yLeftAxis.setLabelCount(25);
+        yLeftAxis.setValueFormatter(new AdherenceYAxisFormatter());
+
+        // XAxis
         mScatterChart.getXAxis().setAxisMaximum(0.8f);
         mScatterChart.getXAxis().setAxisMinimum(0.0f);
         // Use the formatter
