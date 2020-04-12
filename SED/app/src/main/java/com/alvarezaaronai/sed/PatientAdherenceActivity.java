@@ -31,6 +31,13 @@ public class PatientAdherenceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient_adherence);
 
+        // Check if we got extra
+        if(getIntent().hasExtra("patient_id")) {
+            // If we get -1, something is obviously wrong.
+            int patient_id = getIntent().getIntExtra("patient_id" , -1);
+            Log.d(TAG, "onCreate: Patient Id Extra: " + patient_id);
+        }
+
         mScatterChart = findViewById(R.id.adherence_scatter_chart);
 
         mScheduledEntries = generateScheduledEntries();

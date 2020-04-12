@@ -11,6 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -100,7 +101,7 @@ public class PhysicianProfileActivity extends AppCompatActivity {
         Log.d(TAG, "initRecyclerView: " + mPatients);
         mRecyclerView = findViewById(R.id.recycler_view_patients);
 
-        PhysicianRecyclerViewAdapter adapter = new PhysicianRecyclerViewAdapter(mPatients);
+        PhysicianRecyclerViewAdapter adapter = new PhysicianRecyclerViewAdapter(mPatients, this);
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
