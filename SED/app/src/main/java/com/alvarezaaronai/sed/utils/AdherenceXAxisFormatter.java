@@ -26,7 +26,7 @@ public class AdherenceXAxisFormatter extends ValueFormatter {
          * has an empty string as a label, since it looks awkward if Mon
          * start at the very left corner
          */
-        int intValue = (int) Math.round(value * 10);
+        int intValue = (int) Math.round(value);
         intValue -= 1;
 
         if(intValue < 0 || intValue > 6) {

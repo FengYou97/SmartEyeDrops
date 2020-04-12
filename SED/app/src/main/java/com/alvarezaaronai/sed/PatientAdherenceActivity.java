@@ -16,12 +16,14 @@ import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class PatientAdherenceActivity extends AppCompatActivity {
 
     private static final String TAG = "PatientAdherenceActivit";
 
-    private List<Entry> mEntries;
+    private List<Entry> mScheduledEntries;
+    private List<Entry> mPatientEntries;
     private ScatterChart mScatterChart;
 
     @Override
@@ -31,15 +33,27 @@ public class PatientAdherenceActivity extends AppCompatActivity {
 
         mScatterChart = findViewById(R.id.adherence_scatter_chart);
 
-        mEntries = generateEnrtries();
+        mScheduledEntries = generateScheduledEntries();
+
+        // Random values for Patient
+        mPatientEntries = generateRandomEntries();
+
         // Create ScatterDataSet using list of Entries
-        ScatterDataSet scatterDataSet1 = new ScatterDataSet(mEntries, "Test Entries");
+        ScatterDataSet scatterDataSet1 = new ScatterDataSet(mScheduledEntries, "Scheduled");
+        scatterDataSet1.setColor(R.color.grey);
+
+        // Create ScatterDataSet for random patient entries
+        ScatterDataSet randomDataSet = new ScatterDataSet(mPatientEntries, "Actual");
+
         // Using the previous ScatterDataSet objects, add them to the list of IScatterDataSet objects
         List<IScatterDataSet> dataSetList = new ArrayList<IScatterDataSet>();
         dataSetList.add(scatterDataSet1);
+        dataSetList.add(randomDataSet);
 
         // Finally, we can create our ScatterData
         ScatterData scatterData = new ScatterData(dataSetList);
+        // Removes Text from data values (Ex: 18 for 7am)
+        scatterData.setDrawValues(false);
 
         mScatterChart.setData(scatterData);
 
@@ -64,7 +78,7 @@ public class PatientAdherenceActivity extends AppCompatActivity {
         yLeftAxis.setValueFormatter(new AdherenceYAxisFormatter());
 
         // XAxis
-        mScatterChart.getXAxis().setAxisMaximum(0.8f);
+        mScatterChart.getXAxis().setAxisMaximum(8.0f);
         mScatterChart.getXAxis().setAxisMinimum(0.0f);
         // Use the formatter
         mScatterChart.getXAxis().setValueFormatter(new AdherenceXAxisFormatter());
@@ -84,18 +98,38 @@ public class PatientAdherenceActivity extends AppCompatActivity {
      *      Sat = 0.6
      *      Sun = 0.7
      */
-    private List<Entry> generateEnrtries() {
+    private List<Entry> generateScheduledEntries() {
         // Entry(float x, float y)
         List<Entry> entries = new ArrayList<Entry>();
 
-        Entry firstEntry = new Entry(0.1f,1.8f);
-        Entry secondEntry = new Entry(0.4f,2f);
-
-        entries.add(firstEntry);
-        entries.add(secondEntry);
-
+        for(int i = 1; i < 8; i++) {
+            entries.add(new Entry((float) i, 18f));
+        }
 
         return entries;
+    }
+
+    // For prototyping purposes only. Delete later
+    private List<Entry> generateRandomEntries() {
+        List<Entry> entries = new ArrayList<Entry>();
+
+        for(int i = 1; i < 8; i++) {
+            float hourOfDay = (float) getRandomNumberInRange(1, 24);
+            entries.add(new Entry((float) i, hourOfDay));
+        }
+
+        return entries;
+    }
+
+    // Helper Function for generateRandomEntries(). Delete later
+    private static int getRandomNumberInRange(int min, int max) {
+
+        if (min >= max) {
+            throw new IllegalArgumentException("max must be greater than min");
+        }
+
+        Random r = new Random();
+        return r.nextInt((max - min) + 1) + min;
     }
 
 

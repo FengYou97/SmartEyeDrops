@@ -10,4 +10,6 @@
     <color name="blueSecondary">#296BB7</color>
     <color name="darkBlue">#175BAC</color>
     <color name="white">#fff</color>
+    <color name="grey">#C6C6C6</color>
+
 </resources>
