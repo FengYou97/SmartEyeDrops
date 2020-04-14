@@ -1,12 +1,17 @@
 package com.alvarezaaronai.sed.adapters;
 
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.alvarezaaronai.sed.PatientAdherenceActivity;
 import com.alvarezaaronai.sed.R;
-import com.alvarezaaronai.sed.models.Patient;
+import com.alvarezaaronai.sed.Models.Patient;
+import com.google.android.material.button.MaterialButton;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -18,10 +23,18 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class PhysicianRecyclerViewAdapter extends RecyclerView.Adapter<PhysicianRecyclerViewAdapter.ViewHolder> {
     private static final String TAG = "PhysicianRecyclerViewAd";
 
-    private ArrayList<Patient> mPatients = new ArrayList<>();
+    private ArrayList<Patient> mPatients;
+    private Context mContext;
 
-    public PhysicianRecyclerViewAdapter(ArrayList<Patient> patients) {
-        mPatients = patients;
+    public PhysicianRecyclerViewAdapter(ArrayList<Patient> patients, Context context) {
+        if(mPatients == null) {
+            Log.d(TAG, "PhysicianRecyclerViewAdapter: Empty patients arraylist");
+            mPatients = new ArrayList<>();
+        } else {
+            mPatients = patients;
+        }
+
+        mContext = context;
     }
 
     @NonNull
@@ -34,6 +47,8 @@ public class PhysicianRecyclerViewAdapter extends RecyclerView.Adapter<Physician
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+
+        Log.d(TAG, "onBindViewHolder: Patient Id: " + mPatients.get(position).getPatient_id());
 
         // Use Picasso to load image into CircleImageView
         Picasso.get().load(mPatients.get((position)).getPatient_image()).into(holder.patientImage);
@@ -49,11 +64,12 @@ public class PhysicianRecyclerViewAdapter extends RecyclerView.Adapter<Physician
         return mPatients.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         CircleImageView patientImage;
         TextView patientName;
         TextView patientEmail;
+        MaterialButton patientViewButton;
 
 
         public ViewHolder(@NonNull View itemView) {
@@ -62,6 +78,17 @@ public class PhysicianRecyclerViewAdapter extends RecyclerView.Adapter<Physician
             patientImage = itemView.findViewById(R.id.patient_image);
             patientName = itemView.findViewById(R.id.patient_name);
             patientEmail = itemView.findViewById(R.id.patient_email);
+
+            patientViewButton = itemView.findViewById(R.id.patient_view_button);
+            patientViewButton.setOnClickListener(this);
+
+        }
+
+        @Override
+        public void onClick(View view) {
+            Intent intent = new Intent(mContext, PatientAdherenceActivity.class);
+            intent.putExtra("patient_id", mPatients.get(getAdapterPosition()).getPatient_id());
+            mContext.startActivity(intent);
         }
     }
 }

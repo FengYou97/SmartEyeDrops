@@ -1,6 +1,6 @@
 package com.alvarezaaronai.sed;
 
-import com.alvarezaaronai.sed.models.Physician;
+import com.alvarezaaronai.sed.Models.Physician;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

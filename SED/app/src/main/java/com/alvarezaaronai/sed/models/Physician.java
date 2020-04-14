@@ -1,6 +1,7 @@
-package com.alvarezaaronai.sed.models;
+package com.alvarezaaronai.sed.Models;
 
 import java.util.ArrayList;
+import com.alvarezaaronai.sed.Models.Patient;
 
 public class Physician {
 

@@ -11,12 +11,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.alvarezaaronai.sed.Models.Physician;
 import com.alvarezaaronai.sed.adapters.PhysicianRecyclerViewAdapter;
-import com.alvarezaaronai.sed.models.Patient;
-import com.alvarezaaronai.sed.models.Physician;
+import com.alvarezaaronai.sed.Models.Patient;
+
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -55,7 +57,7 @@ public class PhysicianProfileActivity extends AppCompatActivity {
     public void initPhysicianProfile() {
         // For Testing purposes only!!!
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://9l27z1ir6b.execute-api.us-west-2.amazonaws.com/prod/")
+                .baseUrl("https://od2h1ov7je.execute-api.us-west-1.amazonaws.com/prod/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -96,10 +98,10 @@ public class PhysicianProfileActivity extends AppCompatActivity {
     }
 
     public void initRecyclerView() {
-        Log.d(TAG, "initRecyclerView: " + mPatients);
+        Log.d(TAG, "initRecyclerView: mPatients: " + mPatients);
         mRecyclerView = findViewById(R.id.recycler_view_patients);
 
-        PhysicianRecyclerViewAdapter adapter = new PhysicianRecyclerViewAdapter(mPatients);
+        PhysicianRecyclerViewAdapter adapter = new PhysicianRecyclerViewAdapter(mPatients, this);
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
