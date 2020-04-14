@@ -74,6 +74,7 @@ public class PatientAdherenceActivity extends AppCompatActivity {
     private void configureScatterChart() {
         // Configure ScatterChart
         mScatterChart.setTouchEnabled(false); // Disables interaction with graph
+        mScatterChart.getDescription().setEnabled(false);
 
         // YAxis
         mScatterChart.getAxisRight().setEnabled(false);// Remove right labels

@@ -98,7 +98,7 @@ public class PhysicianProfileActivity extends AppCompatActivity {
     }
 
     public void initRecyclerView() {
-        Log.d(TAG, "initRecyclerView: " + mPatients);
+        Log.d(TAG, "initRecyclerView: mPatients: " + mPatients);
         mRecyclerView = findViewById(R.id.recycler_view_patients);
 
         PhysicianRecyclerViewAdapter adapter = new PhysicianRecyclerViewAdapter(mPatients, this);
