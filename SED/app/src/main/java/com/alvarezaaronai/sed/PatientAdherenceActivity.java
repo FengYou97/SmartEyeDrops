@@ -7,6 +7,9 @@ import android.util.Log;
 
 import com.alvarezaaronai.sed.utils.AdherenceXAxisFormatter;
 import com.alvarezaaronai.sed.utils.AdherenceYAxisFormatter;
+import com.alvarezaaronai.sed.utils.httprequest;
+import com.alvarezaaronai.sed.utils.patient;
+import com.alvarezaaronai.sed.utils.record;
 import com.github.mikephil.charting.charts.ScatterChart;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
@@ -14,6 +17,7 @@ import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
 import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -36,6 +40,9 @@ public class PatientAdherenceActivity extends AppCompatActivity {
             // If we get -1, something is obviously wrong.
             int patient_id = getIntent().getIntExtra("patient_id" , -1);
             Log.d(TAG, "onCreate: Patient Id Extra: " + patient_id);
+
+            getPatientRecords(patient_id);
+
         }
 
         mScatterChart = findViewById(R.id.adherence_scatter_chart);
@@ -92,6 +99,13 @@ public class PatientAdherenceActivity extends AppCompatActivity {
         mScatterChart.getXAxis().setValueFormatter(new AdherenceXAxisFormatter());
     }
 
+    private void getPatientRecords(int patient_id) {
+
+        RecordRequestRunnable requestRunnable = new RecordRequestRunnable(patient_id);
+        new Thread(requestRunnable).start();
+
+    }
+
 
     /**
      *  Gonna be using this to hard code some Entry values
@@ -140,5 +154,32 @@ public class PatientAdherenceActivity extends AppCompatActivity {
         return r.nextInt((max - min) + 1) + min;
     }
 
+
+    class RecordRequestRunnable implements Runnable {
+
+        int patient_id;
+
+        RecordRequestRunnable(int patient_id) {
+            this.patient_id = patient_id;
+        }
+
+        @Override
+        public void run() {
+            try {
+                patient patient = httprequest.requestPatient(patient_id);
+                // Android Studio says this may be Null...
+                List<record> records = patient.getRecords();
+
+                Log.d(TAG, "getPatientRecords: records: ");
+                for(int i = 0; i < records.size(); i++) {
+                    Log.d(TAG, "run: " + records.get(i));
+                }
+
+            } catch(ParseException ex) {
+                System.out.println("ParseException");
+                System.out.println(ex);
+            }
+        }
+    }
 
 }

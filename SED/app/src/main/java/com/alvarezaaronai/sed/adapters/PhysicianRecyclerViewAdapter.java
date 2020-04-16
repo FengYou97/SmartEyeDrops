@@ -23,10 +23,14 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class PhysicianRecyclerViewAdapter extends RecyclerView.Adapter<PhysicianRecyclerViewAdapter.ViewHolder> {
     private static final String TAG = "PhysicianRecyclerViewAd";
 
-    private ArrayList<Patient> mPatients;
+    private ArrayList<Patient> mPatients = new ArrayList<>();;
     private Context mContext;
 
     public PhysicianRecyclerViewAdapter(ArrayList<Patient> patients, Context context) {
+
+        for(int i = 0; i < patients.size(); i++) {
+            Log.d(TAG, "PhysicianRecyclerViewAdapter: PATIENT!" + patients.get(i));
+        }
         if(mPatients == null) {
             Log.d(TAG, "PhysicianRecyclerViewAdapter: Empty patients arraylist");
             mPatients = new ArrayList<>();
