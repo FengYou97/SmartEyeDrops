@@ -12,12 +12,11 @@ public class AdherenceXAxisFormatter extends ValueFormatter {
     private static final String TAG = "AdherenceXAxisFormatter";
 
     /**
-     * Okay so this works so far.
-     * We just need to disable zoom or only allow 7 value on the graph.
-     * Because now we're getting
-     * "Mon" "Mon"  "Tue" ...etc
+     * Was initially going to display all days of the month from
+     * 1-31 (or 30 or 29 or whatever). But since the screen is so
+     * small the numbers look all squished up together. So for now
+     * I'm not putting any labels.
      */
-    private String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
     @Override
     public String getAxisLabel(float value, AxisBase axis) {
@@ -26,15 +25,16 @@ public class AdherenceXAxisFormatter extends ValueFormatter {
          * has an empty string as a label, since it looks awkward if Mon
          * start at the very left corner
          */
-        int intValue = (int) Math.round(value);
-        intValue -= 1;
+//        int intValue = (int) Math.round(value);
+//        intValue -= 1;
+//
+//        if(intValue < 0 || intValue > 6) {
+//            // Return empty string for axis label
+//            return "";
+//        }
 
-        if(intValue < 0 || intValue > 6) {
-            // Return empty string for axis label
-            return "";
-        }
-
-        return days[intValue];
+//        return days[intValue];
+        return "";
     }
 
 

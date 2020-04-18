@@ -19,8 +19,10 @@ import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 public class PatientAdherenceActivity extends AppCompatActivity {
 
@@ -29,6 +31,17 @@ public class PatientAdherenceActivity extends AppCompatActivity {
     private List<Entry> mScheduledEntries;
     private List<Entry> mPatientEntries;
     private ScatterChart mScatterChart;
+
+    /**
+     * Going to be changing these values often.
+     * Initializing them with the user's current year and month,
+     * and changing them as the user clicks "Next" or "Previous"
+     */
+    private String currentMonth;
+    private String currentYear;
+
+    Map<String, Map<String, List<String>>> chartRecords =
+            new HashMap<String, Map<String, List<String>>>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,28 +54,35 @@ public class PatientAdherenceActivity extends AppCompatActivity {
             int patient_id = getIntent().getIntExtra("patient_id" , -1);
             Log.d(TAG, "onCreate: Patient Id Extra: " + patient_id);
 
-            getPatientRecords(patient_id);
+            currentMonth = getCurrentMonth();
+            currentYear = getCurrentYear();
 
+            getPatientRecords(patient_id);
         }
 
         mScatterChart = findViewById(R.id.adherence_scatter_chart);
 
+        // Start off empty
+        mPatientEntries = new ArrayList<Entry>();
+
+        createScatterChart();
+
+    }
+
+    private void createScatterChart() {
         mScheduledEntries = generateScheduledEntries();
 
-        // Random values for Patient
-        mPatientEntries = generateRandomEntries();
-
         // Create ScatterDataSet using list of Entries
-        ScatterDataSet scatterDataSet1 = new ScatterDataSet(mScheduledEntries, "Scheduled");
-        scatterDataSet1.setColor(R.color.grey);
+        ScatterDataSet scheduledDataSet = new ScatterDataSet(mScheduledEntries, "Scheduled");
+        scheduledDataSet.setColor(R.color.grey);
 
-        // Create ScatterDataSet for random patient entries
-        ScatterDataSet randomDataSet = new ScatterDataSet(mPatientEntries, "Actual");
+        ScatterDataSet patientDataSet = new ScatterDataSet(mPatientEntries, "Actual");
 
         // Using the previous ScatterDataSet objects, add them to the list of IScatterDataSet objects
         List<IScatterDataSet> dataSetList = new ArrayList<IScatterDataSet>();
-        dataSetList.add(scatterDataSet1);
-        dataSetList.add(randomDataSet);
+
+        dataSetList.add(scheduledDataSet);
+        dataSetList.add(patientDataSet);
 
         // Finally, we can create our ScatterData
         ScatterData scatterData = new ScatterData(dataSetList);
@@ -75,9 +95,9 @@ public class PatientAdherenceActivity extends AppCompatActivity {
 
         // IMPORTANT!! Don't forget!
         mScatterChart.invalidate(); // Refresh
-
     }
 
+    // Chart Configuration
     private void configureScatterChart() {
         // Configure ScatterChart
         mScatterChart.setTouchEnabled(false); // Disables interaction with graph
@@ -93,65 +113,124 @@ public class PatientAdherenceActivity extends AppCompatActivity {
         yLeftAxis.setValueFormatter(new AdherenceYAxisFormatter());
 
         // XAxis
-        mScatterChart.getXAxis().setAxisMaximum(8.0f);
+        mScatterChart.getXAxis().setAxisMaximum(32.0f);
         mScatterChart.getXAxis().setAxisMinimum(0.0f);
-        // Use the formatter
+        mScatterChart.getXAxis().setLabelCount(32);
+        // Use the formatter to remove all 33 labels
         mScatterChart.getXAxis().setValueFormatter(new AdherenceXAxisFormatter());
     }
 
     private void getPatientRecords(int patient_id) {
-
         RecordRequestRunnable requestRunnable = new RecordRequestRunnable(patient_id);
         new Thread(requestRunnable).start();
-
     }
 
 
-    /**
-     *  Gonna be using this to hard code some Entry values
-     *  and returning a list of Entry objects.
-     *
-     *  XAxis:
-     *      Mon = 0.1
-     *      Tue = 0.2
-     *      Wed = 0.3
-     *      Thu = 0.4
-     *      Fri = 0.5
-     *      Sat = 0.6
-     *      Sun = 0.7
-     */
+    // Generates the grey data point
     private List<Entry> generateScheduledEntries() {
         // Entry(float x, float y)
         List<Entry> entries = new ArrayList<Entry>();
 
-        for(int i = 1; i < 8; i++) {
+        for(int i = 1; i < 32; i++) {
             entries.add(new Entry((float) i, 18f));
         }
 
         return entries;
     }
 
-    // For prototyping purposes only. Delete later
-    private List<Entry> generateRandomEntries() {
+
+    public void addRecordToMap(String date, String time) {
+        String yearMonthKey = date.substring(0, 7);
+        String dayKey = date.substring(8);
+
+        if(chartRecords.containsKey(yearMonthKey)) {
+            Map<String, List<String>> dayMap = chartRecords.get(yearMonthKey);
+
+            if(dayMap.containsKey(dayKey)) {
+                dayMap.get(dayKey).add(time);
+
+            } else {
+                List<String> times = new ArrayList<>();
+                times.add(time);
+                dayMap.put(dayKey, times);
+            }
+
+        } else {
+            HashMap<String, List<String>> value = new HashMap<>();
+            List<String> times = new ArrayList<>();
+            times.add(time);
+
+            value.put(dayKey, times);
+
+            chartRecords.put(yearMonthKey, value);
+        }
+
+    }
+
+    private String getCurrentMonth() {
+        int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+
+        // Adding a leading 0
+        if(month < 10) {
+            return "0" + month;
+        }
+
+        return "" + month;
+    }
+
+    private String getCurrentYear() {
+        return "" + Calendar.getInstance().get(Calendar.YEAR);
+    }
+
+    private float convertTimeToFloat(String timeString) {
+        // Change format from 10:30 to 10.30
+        String newTimeString = timeString.replace(":", ".");
+        // Convert String to Float
+        float time = Float.parseFloat(newTimeString);
+        // Not sure why adding .75 places it in the correct spot.
+        float convertedTime = (float) 24.0f - time + .75f;
+
+        return convertedTime;
+    }
+
+    /**
+     * We're going to be re-using this function a lot.
+     * 1) When user first visits PatientAdherenceActivity
+     * 2) When user clicks "Next" or "Previous"
+     *
+     * yearMonthKey must be in the format "year-month"
+     * Ex: 2020-04
+     */
+    public List<Entry> generatePatientEntries(String yearMonthKey) {
+        Log.d(TAG, "generatePatientEntries:");
         List<Entry> entries = new ArrayList<Entry>();
 
-        for(int i = 1; i < 8; i++) {
-            float hourOfDay = (float) getRandomNumberInRange(1, 24);
-            entries.add(new Entry((float) i, hourOfDay));
+        // Log.d(TAG, "generatePatientEntries: yearMonthKey " + yearMonthKey);
+        // Check if there are any entries for this particular month
+        if(chartRecords.containsKey(yearMonthKey)) {
+            // Iterate through all keys in nest Map and use those
+            // keys to get the time values.
+            Map<String, List<String>> dayAndTimeRecords = chartRecords.get(yearMonthKey);
+            for(String key : dayAndTimeRecords.keySet()) {
+                List<String> times = dayAndTimeRecords.get(key);
+
+                for(int i = 0; i < times.size(); i++) {
+                    String timeString = times.get(i);
+                    float hourOfDay = convertTimeToFloat(timeString);
+
+                    /**
+                     * key should be x-axis (day of month). But going to
+                     * double check just in case
+                     */
+                    float dayOfMonth = Float.parseFloat(key);
+                    Log.d(TAG, "generatePatientEntries: dayOfMonth: " + dayOfMonth);
+                    entries.add(new Entry(dayOfMonth, hourOfDay));
+                }
+            }
+
         }
 
         return entries;
-    }
-
-    // Helper Function for generateRandomEntries(). Delete later
-    private static int getRandomNumberInRange(int min, int max) {
-
-        if (min >= max) {
-            throw new IllegalArgumentException("max must be greater than min");
-        }
-
-        Random r = new Random();
-        return r.nextInt((max - min) + 1) + min;
     }
 
 
@@ -173,6 +252,19 @@ public class PatientAdherenceActivity extends AppCompatActivity {
                 Log.d(TAG, "getPatientRecords: records: ");
                 for(int i = 0; i < records.size(); i++) {
                     Log.d(TAG, "run: " + records.get(i));
+                    String date = records.get(i).getDate();
+                    String time = records.get(i).getTime();
+                    addRecordToMap(date, time);
+
+                    /**
+                     * Now we gotta create a String using currentYear and currentMonth
+                     * (Ex: 2020-04) and using this String we iterate through our map and
+                     * create a bunch of Entry objects and initialize mPatientRecords
+                     */
+                     mPatientEntries = generatePatientEntries(currentYear + "-" + currentMonth);
+
+                     createScatterChart();
+
                 }
 
             } catch(ParseException ex) {
