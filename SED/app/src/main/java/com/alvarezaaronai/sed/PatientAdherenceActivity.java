@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.alvarezaaronai.sed.utils.AdherenceXAxisFormatter;
@@ -17,6 +18,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.ScatterData;
 import com.github.mikephil.charting.data.ScatterDataSet;
 import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet;
+import com.google.android.material.button.MaterialButton;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -32,7 +34,10 @@ public class PatientAdherenceActivity extends AppCompatActivity {
     private List<Entry> mScheduledEntries;
     private List<Entry> mPatientEntries;
     private ScatterChart mScatterChart;
+
     private TextView mYearMonthHeader;
+    private MaterialButton mNext;
+    private MaterialButton mPrevious;
 
     /**
      * Going to be changing these values often.
@@ -63,9 +68,51 @@ public class PatientAdherenceActivity extends AppCompatActivity {
             currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;;
             currentYear = Calendar.getInstance().get(Calendar.YEAR);;
 
+            // Important, gets every single record for every month
             getPatientRecords(patient_id);
         }
 
+
+        mNext = findViewById(R.id.adherence_next_button);
+        mPrevious = findViewById(R.id.adherence_previous_button);
+
+        mNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(currentMonth == 12) {
+                    currentMonth = 1;
+                    currentYear++;
+                } else {
+                    currentMonth++;
+                }
+
+                String monthString = getMonthNumberString(currentMonth);
+                mPatientEntries = generatePatientEntries(currentYear + "-" + monthString);
+                createScatterChart();
+
+                String header = months[currentMonth - 1] + ", " + currentYear;
+                mYearMonthHeader.setText(header);
+            }
+        });
+
+        mPrevious.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(currentMonth == 1) {
+                    currentMonth = 12;
+                    currentYear--;
+                } else {
+                    currentMonth--;
+                }
+
+                String monthString = getMonthNumberString(currentMonth);
+                mPatientEntries = generatePatientEntries(currentYear + "-" + monthString);
+                createScatterChart();
+
+                String header = months[currentMonth - 1] + ", " + currentYear;
+                mYearMonthHeader.setText(header);
+            }
+        });
 
         mYearMonthHeader = findViewById(R.id.year_month_header);
         String header = months[currentMonth - 1] + ", " + currentYear;
@@ -190,20 +237,6 @@ public class PatientAdherenceActivity extends AppCompatActivity {
 
     }
 
-//    private String getCurrentMonth() {
-//        int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
-//
-//        // Adding a leading 0
-//        if(month < 10) {
-//            return "0" + month;
-//        }
-//
-//        return "" + month;
-//    }
-
-//    private String getCurrentYear() {
-//        return "" + Calendar.getInstance().get(Calendar.YEAR);
-//    }
 
     private float convertTimeToFloat(String timeString) {
         // Change format from 10:30 to 10.30
@@ -278,18 +311,17 @@ public class PatientAdherenceActivity extends AppCompatActivity {
                     String date = records.get(i).getDate();
                     String time = records.get(i).getTime();
                     addRecordToMap(date, time);
-
-                    /**
-                     * Now we gotta create a String using currentYear and currentMonth
-                     * (Ex: 2020-04) and using this String we iterate through our map and
-                     * create a bunch of Entry objects and initialize mPatientRecords
-                     */
-                    String monthString = getMonthNumberString(currentMonth);
-                     mPatientEntries = generatePatientEntries(currentYear + "-" + monthString);
-
-                     createScatterChart();
-
                 }
+
+                /**
+                 * Now we gotta create a String using currentYear and currentMonth
+                 * (Ex: 2020-04) and using this String we iterate through our map and
+                 * create a bunch of Entry objects and initialize mPatientRecords
+                 */
+                String monthString = getMonthNumberString(currentMonth);
+                mPatientEntries = generatePatientEntries(currentYear + "-" + monthString);
+
+                createScatterChart();
 
             } catch(ParseException ex) {
                 System.out.println("ParseException");
