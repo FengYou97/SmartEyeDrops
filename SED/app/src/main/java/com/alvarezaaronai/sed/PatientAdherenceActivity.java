@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.alvarezaaronai.sed.utils.AdherenceXAxisFormatter;
 import com.alvarezaaronai.sed.utils.AdherenceYAxisFormatter;
@@ -31,14 +32,19 @@ public class PatientAdherenceActivity extends AppCompatActivity {
     private List<Entry> mScheduledEntries;
     private List<Entry> mPatientEntries;
     private ScatterChart mScatterChart;
+    private TextView mYearMonthHeader;
 
     /**
      * Going to be changing these values often.
      * Initializing them with the user's current year and month,
      * and changing them as the user clicks "Next" or "Previous"
      */
-    private String currentMonth;
-    private String currentYear;
+    private int currentMonth;
+    private int currentYear;
+
+    private String[] months = {"January", "February", "March", "April", "May", "June", "July",
+            "August", "September", "October", "November", "December"};
+
 
     Map<String, Map<String, List<String>>> chartRecords =
             new HashMap<String, Map<String, List<String>>>();
@@ -54,11 +60,16 @@ public class PatientAdherenceActivity extends AppCompatActivity {
             int patient_id = getIntent().getIntExtra("patient_id" , -1);
             Log.d(TAG, "onCreate: Patient Id Extra: " + patient_id);
 
-            currentMonth = getCurrentMonth();
-            currentYear = getCurrentYear();
+            currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;;
+            currentYear = Calendar.getInstance().get(Calendar.YEAR);;
 
             getPatientRecords(patient_id);
         }
+
+
+        mYearMonthHeader = findViewById(R.id.year_month_header);
+        String header = months[currentMonth - 1] + ", " + currentYear;
+        mYearMonthHeader.setText(header);
 
         mScatterChart = findViewById(R.id.adherence_scatter_chart);
 
@@ -126,6 +137,18 @@ public class PatientAdherenceActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Returns a String representation of the month number.
+     * Ex: 4 will return "04", 10 will return "10", etc.
+     */
+    private String getMonthNumberString(int monthNumber) {
+        if(monthNumber < 10) {
+            return "0" + monthNumber;
+        }
+
+        return "" + monthNumber;
+    }
+
     // Generates the grey data point
     private List<Entry> generateScheduledEntries() {
         // Entry(float x, float y)
@@ -167,20 +190,20 @@ public class PatientAdherenceActivity extends AppCompatActivity {
 
     }
 
-    private String getCurrentMonth() {
-        int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+//    private String getCurrentMonth() {
+//        int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+//
+//        // Adding a leading 0
+//        if(month < 10) {
+//            return "0" + month;
+//        }
+//
+//        return "" + month;
+//    }
 
-        // Adding a leading 0
-        if(month < 10) {
-            return "0" + month;
-        }
-
-        return "" + month;
-    }
-
-    private String getCurrentYear() {
-        return "" + Calendar.getInstance().get(Calendar.YEAR);
-    }
+//    private String getCurrentYear() {
+//        return "" + Calendar.getInstance().get(Calendar.YEAR);
+//    }
 
     private float convertTimeToFloat(String timeString) {
         // Change format from 10:30 to 10.30
@@ -261,7 +284,8 @@ public class PatientAdherenceActivity extends AppCompatActivity {
                      * (Ex: 2020-04) and using this String we iterate through our map and
                      * create a bunch of Entry objects and initialize mPatientRecords
                      */
-                     mPatientEntries = generatePatientEntries(currentYear + "-" + currentMonth);
+                    String monthString = getMonthNumberString(currentMonth);
+                     mPatientEntries = generatePatientEntries(currentYear + "-" + monthString);
 
                      createScatterChart();
 
