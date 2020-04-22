@@ -46,7 +46,7 @@ android:layout_height="wrap_content">
         android:id="@+id/graphResults"
         android:layout_width="350dp"
         android:layout_height="350dp"
-        android:background="@color/blueSecondary"
+        android:background="@color/lightBlueGrey"
         android:padding="15dp"/>
 
 

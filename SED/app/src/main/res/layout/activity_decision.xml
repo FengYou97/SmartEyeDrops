@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+android:orientation="vertical" android:layout_width="match_parent"
+android:layout_gravity="center_horizontal"
+android:layout_height="match_parent">
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="25sp"
+    android:padding="15dp"
+    android:textAlignment="center"
+    android:textColor="@color/BLACK"
+    android:text="Select whether you want to record or go to profile."/>
+
+<Button
+    android:id="@+id/recordButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:padding="15dp"
+    android:textColor="@color/colorPrimary"
+    android:text="Start Recording"
+    android:textSize="20sp" />
+
+<Button
+    android:id="@+id/goToProfileButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:padding="15dp"
+    android:textColor="@color/colorPrimary"
+    android:text="Go To Profile"
+    android:textSize="20sp" />
 
 </LinearLayout>

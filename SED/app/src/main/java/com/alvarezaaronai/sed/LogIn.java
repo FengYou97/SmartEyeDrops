@@ -28,7 +28,7 @@ public class LogIn extends AppCompatActivity {
                 if(userId.getText().toString().equals("doctor") &&
                         userPw.getText().toString().equals("doctorPW")) {
                     // change to doctor page instead of patient page activity
-                    Intent doctorIntent = new Intent(LogIn.this,PatientPage.class);
+                    Intent doctorIntent = new Intent(LogIn.this,Decision.class);
                     startActivity(doctorIntent);
                     finish();
                 }
