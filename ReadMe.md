@@ -6,10 +6,10 @@ We plan to develop a completely new eye drop adherence monitor that will fit any
 
 ## Team Members
 - Team Lead: [Feng You](https://www.linkedin.com/in/feng-you-155477ba/)
-- QA Lead/Machine Learning Lead: Marco Aguilar
-- Cloud Intergration Lead: Ivan Yu
-- Mobile Cloud Integration Lead/Cloud Integration: Aaron Alvarez
-- Machine Learning: Ana Cortes
+- QA Lead/Machine Learning Lead: [Marco Aguilar](https://www.linkedin.com/in/marco-aguilar-77422876/)
+- Cloud Intergration Lead: [Ivan Yu](https://www.linkedin.com/in/ivan-yu-bb9215149/)
+- Mobile Cloud Integration Lead/Cloud Integration: [Aaron Alvarez](https://www.linkedin.com/in/alvarezaaronai/)
+- Machine Learning: [Ana Cortes](https://www.linkedin.com/in/ana-cortes-10200867/)
 - Machine Learning: Jonathan Nunez
 
 
