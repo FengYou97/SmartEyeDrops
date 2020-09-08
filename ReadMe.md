@@ -10,7 +10,7 @@ We plan to develop a completely new eye drop adherence monitor that will fit any
 - Cloud Intergration Lead: [Ivan Yu](https://www.linkedin.com/in/ivan-yu-bb9215149/)
 - Mobile Cloud Integration Lead/Cloud Integration: [Aaron Alvarez](https://www.linkedin.com/in/alvarezaaronai/)
 - Machine Learning: [Ana Cortes](https://www.linkedin.com/in/ana-cortes-10200867/)
-- Machine Learning: Jonathan Nunez
+- Machine Learning: [Jonathan Nunez](https://www.linkedin.com/in/jonathan-nunez-489212171/)
 
 
 ## Advisors and Liaisons
